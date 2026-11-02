@@ -2,11 +2,11 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-interface RadioCardProps {
+interface RadioCardProps<T extends string> {
   name: string;
-  value: string;
+  value: T;
   checked: boolean;
-  onSelect: (value: string) => void;
+  onSelect: (value: T) => void;
   /** Accessible name of the option; always rendered as the label's text */
   title: string;
   /** Extra details shown beside or below the title */
@@ -20,7 +20,7 @@ interface RadioCardProps {
  * card (invisible but real), so clicks, taps, keyboard arrows and assistive
  * tech all work on the actual control.
  */
-const RadioCard = ({
+const RadioCard = <T extends string>({
   name,
   value,
   checked,
@@ -29,7 +29,7 @@ const RadioCard = ({
   children,
   icon,
   badge,
-}: RadioCardProps) => (
+}: RadioCardProps<T>) => (
   <label className="relative block cursor-pointer">
     <input
       type="radio"

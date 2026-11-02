@@ -10,10 +10,11 @@ import {
 import type {
   ProcessedArchitectures,
   ProcessedVersion,
-} from "@/utils/downloadDataProcessor";
+} from "@/types/downloads";
 
 const empty = { downloadOptions: [], links: [] };
 const option = (label: string) => ({
+  id: label.toLowerCase(),
   label,
   link: `https://example.com/${label}`,
 });
@@ -72,6 +73,38 @@ describe("downloadSelection", () => {
     expect(listReleases(arches).map((r) => r.versionId)).toEqual([
       "rocky-10",
       "rocky-8",
+    ]);
+  });
+
+  it("hides releases whose downloads are all disabled", () => {
+    const noDownloads = {
+      defaultImages: empty,
+      cloudImages: empty,
+      containerImages: empty,
+      liveImages: empty,
+      rpiImages: empty,
+      wslImages: empty,
+      visionFive2Images: empty,
+    };
+    const withRetired: ProcessedArchitectures = {
+      x86_64: {
+        versions: [
+          makeVersion("rocky-10"),
+          makeVersion("rocky-9"),
+          makeVersion("rocky-8", noDownloads),
+        ],
+      },
+      aarch64: {
+        versions: [
+          makeVersion("rocky-10"),
+          makeVersion("rocky-8", noDownloads),
+        ],
+      },
+    };
+
+    expect(listReleases(withRetired).map((r) => r.versionId)).toEqual([
+      "rocky-10",
+      "rocky-9",
     ]);
   });
 

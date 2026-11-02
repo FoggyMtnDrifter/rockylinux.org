@@ -11,7 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import RadioCard from "./RadioCard";
-import type { PlatformId } from "@/utils/downloadSelection";
+import type { PlatformId } from "@/types/downloads";
 
 const ICONS: Record<PlatformId, React.ComponentType<{ className?: string }>> = {
   install: ServerIcon,
@@ -52,7 +52,7 @@ const PlatformPicker = ({
             name="platform"
             value={id}
             checked={checked}
-            onSelect={(value) => onSelect(value as PlatformId)}
+            onSelect={onSelect}
             title={t(`${id}.title`)}
             icon={
               <Icon

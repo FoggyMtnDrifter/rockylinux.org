@@ -1,33 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-import type { ProcessedArchitectures } from "@/utils/downloadDataProcessor";
-import {
-  availableArchs,
-  availablePlatforms,
-  listReleases,
-  resolveArch,
-  resolvePlatform,
-} from "@/utils/downloadSelection";
+import type { ProcessedArchitectures } from "@/types/downloads";
 
 import DownloadPanel from "./DownloadPanel";
 import PlatformPicker from "./PlatformPicker";
 import ReleasePicker from "./ReleasePicker";
-
-interface Selection {
-  version: string | null;
-  platform: string | null;
-  arch: string | null;
-}
-
-const fromParams = (params: URLSearchParams): Selection => ({
-  version: params.get("version"),
-  platform: params.get("platform"),
-  arch: params.get("arch"),
-});
+import { useDownloadSelection } from "./useDownloadSelection";
 
 const StepHeading = ({
   id,
@@ -58,45 +38,23 @@ interface DownloadWizardProps {
 
 /**
  * Three steps, top to bottom: release, platform, files. The selection lives in
- * the URL (?version=&platform=&arch=) so any result can be linked to directly.
+ * the URL; see `useDownloadSelection`.
  */
 const DownloadWizard = ({ architectures }: DownloadWizardProps) => {
   const t = useTranslations("download");
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-
-  const [selection, setSelection] = useState<Selection>(() =>
-    fromParams(searchParams)
-  );
-  const [prevQuery, setPrevQuery] = useState(searchParams.toString());
-
-  // Re-sync when the URL changes from outside (browser back/forward)
-  if (searchParams.toString() !== prevQuery) {
-    setPrevQuery(searchParams.toString());
-    setSelection(fromParams(searchParams));
-  }
-
-  const update = (patch: Partial<Selection>) => {
-    setSelection((current) => ({ ...current, ...patch }));
-
-    const params = new URLSearchParams(searchParams.toString());
-    for (const [key, value] of Object.entries(patch)) {
-      if (value) params.set(key, value);
-    }
-    // Shallow update: no server round-trip
-    window.history.pushState(null, "", `${pathname}?${params.toString()}`);
-  };
-
-  const releases = listReleases(architectures);
-  const release =
-    releases.find((r) => r.versionId === selection.version) ?? releases[0];
+  const {
+    releases,
+    release,
+    platforms,
+    platform,
+    archs,
+    arch,
+    selectRelease,
+    selectPlatform,
+    selectArch,
+  } = useDownloadSelection(architectures);
 
   if (!release) return null;
-
-  const platforms = availablePlatforms(architectures, release.versionId);
-  const platform = resolvePlatform(platforms, selection.platform);
-  const archs = availableArchs(architectures, release.versionId, platform);
-  const arch = resolveArch(archs, selection.arch);
 
   return (
     <div className="mx-auto max-w-5xl space-y-12">
@@ -110,7 +68,7 @@ const DownloadWizard = ({ architectures }: DownloadWizardProps) => {
         <ReleasePicker
           releases={releases}
           selected={release.versionId}
-          onSelect={(version) => update({ version })}
+          onSelect={selectRelease}
           labelledBy="step-release"
         />
         <p className="mt-3 text-sm text-muted-foreground">
@@ -128,7 +86,7 @@ const DownloadWizard = ({ architectures }: DownloadWizardProps) => {
         <PlatformPicker
           platforms={platforms}
           selected={platform}
-          onSelect={(next) => update({ platform: next })}
+          onSelect={selectPlatform}
           labelledBy="step-platform"
         />
       </section>
@@ -146,7 +104,7 @@ const DownloadWizard = ({ architectures }: DownloadWizardProps) => {
           platform={platform}
           archs={archs}
           arch={arch}
-          onArchChange={(next) => update({ arch: next })}
+          onArchChange={selectArch}
         />
       </section>
     </div>

@@ -1,7 +1,7 @@
 import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
-import type { Release } from "@/utils/downloadSelection";
+import type { Release } from "@/types/downloads";
 
 import RadioCard from "./RadioCard";
 

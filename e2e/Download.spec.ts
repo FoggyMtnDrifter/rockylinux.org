@@ -192,41 +192,82 @@ test.describe("Download selection updates URL", () => {
 });
 
 test.describe("Download browser back/forward navigation", () => {
-  test("back and forward navigate architecture history", async ({
+  test("back and forward navigate release history", async ({ page }) => {
+    await page.goto("/download?version=rocky-10");
+    await page.getByRole("radio", { name: /Rocky Linux 9/ }).check();
+    await expect(page).toHaveURL(/version=rocky-9/);
+
+    await page.goBack();
+    await expect(page).toHaveURL(/version=rocky-10/);
+    await expect(
+      page.getByRole("radio", { name: /Rocky Linux 10/ })
+    ).toBeChecked();
+
+    await page.goForward();
+    await expect(page).toHaveURL(/version=rocky-9/);
+    await expect(
+      page.getByRole("radio", { name: /Rocky Linux 9/ })
+    ).toBeChecked();
+  });
+
+  test("platform and architecture changes do not add history entries", async ({
     page,
     isMobile,
   }) => {
-    test.skip(isMobile, "Tab switching is desktop only");
+    await page.goto("/download");
+    const before = await page.evaluate(() => window.history.length);
 
-    await page.goto("/download?arch=x86_64");
-    await switchArch(page, /aarch64/);
-    await switchArch(page, /ppc64le/);
+    await choosePlatform(page, /Cloud/);
+    await choosePlatform(page, /Containers/);
+    if (!isMobile) {
+      await choosePlatform(page, /Servers & virtual machines/);
+      await switchArch(page, /aarch64/);
+    }
 
-    // Back to aarch64
-    await page.goBack();
-    await expect(page).toHaveURL(/arch=aarch64/);
-    await expect(page.getByRole("tabpanel", { name: /aarch64/ })).toBeVisible();
-
-    // Back to x86_64
-    await page.goBack();
-    await expect(page).toHaveURL(/arch=x86_64/);
-    await expect(page.getByRole("tabpanel", { name: /x86_64/ })).toBeVisible();
-
-    // Forward to aarch64
-    await page.goForward();
-    await expect(page).toHaveURL(/arch=aarch64/);
-    await expect(page.getByRole("tabpanel", { name: /aarch64/ })).toBeVisible();
+    expect(await page.evaluate(() => window.history.length)).toBe(before);
   });
 
-  test("back restores the previous platform", async ({ page }) => {
-    await page.goto("/download");
-    await choosePlatform(page, /Cloud/);
-    await expect(page).toHaveURL(/platform=cloud/);
+  test("URL reflects the platform actually shown after a release change", async ({
+    page,
+  }) => {
+    await page.goto("/download?version=rocky-10&platform=wsl");
+    await page.getByRole("radio", { name: /Rocky Linux 8/ }).check();
 
-    await page.goBack();
+    await expect(page).toHaveURL(/version=rocky-8/);
+    await expect(page).not.toHaveURL(/platform=wsl/);
     await expect(
       page.getByRole("radio", { name: /Servers & virtual machines/ })
     ).toBeChecked();
+  });
+
+  test("back after choosing a platform leaves the selection", async ({
+    page,
+  }) => {
+    await page.goto("/download");
+    await page.goto("/download?version=rocky-10");
+    await choosePlatform(page, /Cloud/);
+    await expect(page).toHaveURL(/platform=cloud/);
+
+    // The platform replaced the entry, so Back goes to the previous page
+    await page.goBack();
+    await expect(page).toHaveURL(/\/download$/);
+  });
+});
+
+test.describe("Download architecture selector", () => {
+  test("containers have no per-architecture tabs", async ({ page }) => {
+    await page.goto("/download?platform=containers");
+
+    await expect(page.getByText(/podman pull/).first()).toBeVisible();
+    await expect(page.getByRole("tab")).toHaveCount(0);
+    await expect(page.getByRole("tabpanel")).toHaveCount(0);
+  });
+
+  test("a single architecture renders no orphan tabpanel", async ({ page }) => {
+    await page.goto("/download?version=rocky-9&platform=devices");
+
+    await expect(page.getByText("Architecture: ARM (aarch64)")).toBeVisible();
+    await expect(page.getByRole("tabpanel")).toHaveCount(0);
   });
 });
 

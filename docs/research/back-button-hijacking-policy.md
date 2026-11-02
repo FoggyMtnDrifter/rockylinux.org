@@ -7,13 +7,13 @@ Research captured 2026-05-30.
 This doc exists to record why the downloads page's use of `window.history.pushState`
 is _not_ a violation of Google's "back button hijacking" spam policy (enforced
 June 15, 2026), so the question doesn't have to be re-litigated the next time
-someone reads `TabsClient.tsx` and worries about it.
+someone reads `useDownloadSelection.ts` and worries about it.
 
 ## Question
 
 Does Google's June 15, 2026 enforcement against "back button hijacking" apply to
 this site — specifically the downloads page, which updates the URL via the
-History API when a user switches CPU architecture?
+History API when a user changes the release, platform or CPU architecture?
 
 ## Findings
 
@@ -59,18 +59,24 @@ mechanics either.
 ### Why the downloads page is fine
 
 The only History API usage is in
-`app/[locale]/download/components/TabsClient.tsx` (`updateArchitecture`):
+`app/[locale]/download/components/useDownloadSelection.ts` (`update`):
 
 ```ts
-window.history.pushState(null, "", newUrl); // newUrl = ?arch=<selected>
+// newUrl = ?version=<release>&platform=<platform>&arch=<arch>
+window.history.pushState(null, "", newUrl); // choosing a release
+window.history.replaceState(null, "", newUrl); // choosing a platform or architecture
 ```
 
-| Google's violation criteria                           | Downloads page                                     |
-| ----------------------------------------------------- | -------------------------------------------------- |
-| Inserts **deceptive/manipulative** pages into history | No — only a real, shareable `?arch=` state         |
-| Triggered on load / without user intent               | No — fires only on explicit tab clicks             |
-| Back **fails to return** the user to the prior page   | No — back walks selections and then exits normally |
-| Shows phantom feeds / ads / recommendations on back   | No                                                 |
+Only a release change adds a history entry. Platform and architecture changes
+replace the current one, so arrow-keying through a radio group cannot pile up
+entries that Back has to walk through.
+
+| Google's violation criteria                           | Downloads page                                   |
+| ----------------------------------------------------- | ------------------------------------------------ |
+| Inserts **deceptive/manipulative** pages into history | No — only a real, shareable selection in the URL |
+| Triggered on load / without user intent               | No — fires only on explicit selections           |
+| Back **fails to return** the user to the prior page   | No — back walks releases and then exits normally |
+| Shows phantom feeds / ads / recommendations on back   | No                                               |
 
 A sweep of the codebase found no `popstate` interceptors, no `beforeunload`
 dialogs, no redirect chains, and no history entries injected on page load. The

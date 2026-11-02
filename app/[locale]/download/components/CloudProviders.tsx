@@ -62,6 +62,10 @@ const CloudProviders = () => {
         name={t(`${providers}.googleCloud`)}
         hint={t("cloudActions.google")}
         actionLabel={t("cloudActions.openMarketplace")}
+        actionAriaLabel={t("results.actionFor", {
+          action: t("cloudActions.openMarketplace"),
+          name: t(`${providers}.googleCloud`),
+        })}
         href={GOOGLE_URL}
         external
       />
@@ -69,6 +73,10 @@ const CloudProviders = () => {
         name={t(`${providers}.azure`)}
         hint={t("cloudActions.azure")}
         actionLabel={t("cloudActions.openMarketplace")}
+        actionAriaLabel={t("results.actionFor", {
+          action: t("cloudActions.openMarketplace"),
+          name: t(`${providers}.azure`),
+        })}
         href={AZURE_URL}
         external
       />

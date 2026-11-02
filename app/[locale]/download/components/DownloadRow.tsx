@@ -7,6 +7,8 @@ interface DownloadRowProps {
   hint?: string;
   /** Text of the action button, e.g. "Download" */
   actionLabel: string;
+  /** Accessible name of the action button, e.g. "Download DVD ISO" */
+  actionAriaLabel?: string;
   /** Opens the link in a new tab when true (external sites) */
   external?: boolean;
   href?: string;
@@ -20,6 +22,7 @@ const DownloadRow = ({
   name,
   hint,
   actionLabel,
+  actionAriaLabel,
   external,
   href,
   action,
@@ -40,7 +43,7 @@ const DownloadRow = ({
       >
         <a
           href={href}
-          aria-label={`${actionLabel} ${name}`}
+          aria-label={actionAriaLabel}
           {...(external
             ? { target: "_blank", rel: "noopener noreferrer" }
             : {})}

@@ -1,60 +1,17 @@
-import type { DownloadData, UrlEntry } from "@/types/downloads";
-
-// Type for processed version data
-export interface ProcessedVersion {
-  versionName: string;
-  versionId: string;
-  currentVersion: string;
-  plannedEol: string;
-  defaultImages: {
-    downloadOptions: { label: string; link: string }[];
-    links: { name: string; link: string }[];
-  };
-  cloudImages: {
-    downloadOptions: { label: string; link: string }[];
-    links: { name: string; link: string }[];
-  };
-  containerImages: {
-    downloadOptions: { label: string; link: string }[];
-    links: { name: string; link: string }[];
-  };
-  liveImages: {
-    downloadOptions: { label: string; link: string }[];
-    links: { name: string; link: string }[];
-  };
-  rpiImages: {
-    downloadOptions: { label: string; link: string }[];
-    links: { name: string; link: string }[];
-  };
-  wslImages: {
-    downloadOptions: { label: string; link: string }[];
-    links: { name: string; link: string }[];
-  };
-  visionFive2Images: {
-    downloadOptions: { label: string; link: string }[];
-    links: { name: string; link: string }[];
-  };
-}
-
-// Type for processed architectures data
-export type ProcessedArchitectures = Record<
-  string,
-  { versions: ProcessedVersion[] }
->;
+import type {
+  DownloadData,
+  ProcessedArchitectures,
+  ProcessedGroup,
+  ProcessedLink,
+  ProcessedOption,
+  ProcessedVersion,
+  UrlEntry,
+} from "@/types/downloads";
 
 // Type for the translations object
 interface DownloadTranslations {
-  tabs: Record<string, string>;
-  tabsShortened: Record<string, string>;
   cards: {
     defaultImages: {
-      title: string;
-      tooltips: {
-        dvd: string;
-        boot: string;
-        minimal: string;
-        buttonLabel: string;
-      };
       downloadOptions: {
         dvd: string;
         boot: string;
@@ -67,42 +24,33 @@ interface DownloadTranslations {
       checksums: string;
     };
     cloudImages: {
-      title: string;
       downloadOptions: {
         qcow2: string;
       };
     };
     container: {
-      title: string;
       downloadOptions: {
         fullImage: string;
         minimalImage: string;
       };
     };
     liveImages: {
-      title: string;
       downloadOptions: Record<string, string>;
     };
     rpiImages: {
-      title: string;
       download: string;
       readMe: string;
     };
     wslImages: {
-      title: string;
       download: string;
       readMe: string;
     };
     visionfive2Images: {
-      title: string;
       download: string;
       readMe: string;
     };
   };
 }
-
-type DownloadOptionItem = { label: string; link: string };
-type LinkItem = { name: string; link: string };
 
 /**
  * Returns the URL of a download or link entry, or `undefined` when the entry
@@ -118,18 +66,18 @@ export function resolveUrl(entry?: UrlEntry): string | undefined {
 
 // Builds download buttons, skipping missing and disabled entries
 function buildOptions(
-  pairs: [label: string, entry: UrlEntry | undefined][]
-): DownloadOptionItem[] {
-  return pairs.flatMap(([label, entry]) => {
+  triples: [id: string, label: string, entry: UrlEntry | undefined][]
+): ProcessedOption[] {
+  return triples.flatMap(([id, label, entry]) => {
     const link = resolveUrl(entry);
-    return link ? [{ label, link }] : [];
+    return link ? [{ id, label, link }] : [];
   });
 }
 
 // Builds a group's links, skipping missing and disabled entries
 function buildLinks(
   pairs: [name: string, entry: UrlEntry | undefined][]
-): LinkItem[] {
+): ProcessedLink[] {
   return pairs.flatMap(([name, entry]) => {
     const link = resolveUrl(entry);
     return link ? [{ name, link }] : [];
@@ -138,9 +86,9 @@ function buildLinks(
 
 // A group's links are only shown while it has at least one enabled download
 function buildGroup(
-  downloadOptions: DownloadOptionItem[],
-  getLinks: () => LinkItem[]
-): { downloadOptions: DownloadOptionItem[]; links: LinkItem[] } {
+  downloadOptions: ProcessedOption[],
+  getLinks: () => ProcessedLink[]
+): ProcessedGroup {
   return {
     downloadOptions,
     links: downloadOptions.length > 0 ? getLinks() : [],
@@ -172,14 +120,17 @@ export function processArchitecturesData(
           const defaultImages = buildGroup(
             buildOptions([
               [
+                "dvd",
                 translations.cards.defaultImages.downloadOptions.dvd,
                 options.defaultImages.dvd,
               ],
               [
+                "boot",
                 translations.cards.defaultImages.downloadOptions.boot,
                 options.defaultImages.boot,
               ],
               [
+                "minimal",
                 translations.cards.defaultImages.downloadOptions.minimal,
                 options.defaultImages.minimal,
               ],
@@ -210,6 +161,7 @@ export function processArchitecturesData(
             links.cloudImages
               ? buildOptions([
                   [
+                    "qcow2",
                     translations.cards.cloudImages.downloadOptions.qcow2,
                     options.cloudImages?.qcow2,
                   ],
@@ -227,10 +179,12 @@ export function processArchitecturesData(
           const containerImages = buildGroup(
             buildOptions([
               [
+                "fullImage",
                 translations.cards.container.downloadOptions.fullImage,
                 options.container.fullImage,
               ],
               [
+                "minimalImage",
                 translations.cards.container.downloadOptions.minimalImage,
                 options.container.minimalImage,
               ],
@@ -241,6 +195,7 @@ export function processArchitecturesData(
           const liveImages = buildGroup(
             buildOptions(
               Object.entries(options.liveImages ?? {}).map(([key, entry]) => [
+                key,
                 translations.cards.liveImages.downloadOptions[key] ||
                   `Live Image (${key.toUpperCase()})`,
                 entry,
@@ -258,6 +213,7 @@ export function processArchitecturesData(
           const rpiImages = buildGroup(
             buildOptions([
               [
+                "download",
                 translations.cards.rpiImages.download,
                 options.rpiImages?.download,
               ],
@@ -275,6 +231,7 @@ export function processArchitecturesData(
           const wslImages = buildGroup(
             buildOptions([
               [
+                "download",
                 translations.cards.wslImages.download,
                 options.wslImages?.download,
               ],
@@ -292,6 +249,7 @@ export function processArchitecturesData(
           const visionFive2Images = buildGroup(
             buildOptions([
               [
+                "download",
                 translations.cards.visionfive2Images.download,
                 options.visionfive2Images?.download,
               ],

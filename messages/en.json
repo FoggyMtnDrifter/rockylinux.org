@@ -194,7 +194,6 @@
       "riscv64": "RISC-V (riscv64)"
     },
     "selectVersion": "Select a version:",
-    "plannedEol": "Planned EOL:",
     "cards": {
       "defaultImages": {
         "title": "Default Images",
@@ -356,6 +355,8 @@
       "architecture": "Architecture",
       "architectureHelp": "Not sure? Most servers and PCs are x86_64 (AMD/Intel). On an existing Linux machine, run uname -m to check.",
       "download": "Download",
+      "actionFor": "{action} {name}",
+      "singleArch": "Architecture: {arch}",
       "openDockerHub": "View on Docker Hub",
       "related": "Checksums and related files",
       "verifyTitle": "Verify your download",

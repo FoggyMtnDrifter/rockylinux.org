@@ -1,21 +1,10 @@
 import type {
+  GroupKey,
+  PlatformId,
   ProcessedArchitectures,
-  ProcessedVersion,
-} from "@/utils/downloadDataProcessor";
-
-/** Where the user intends to run Rocky Linux. */
-export type PlatformId =
-  | "install"
-  | "cloud"
-  | "containers"
-  | "desktop"
-  | "wsl"
-  | "devices";
-
-export type GroupKey = Exclude<
-  keyof ProcessedVersion,
-  "versionName" | "versionId" | "currentVersion" | "plannedEol"
->;
+  Release,
+  ResolvedGroup,
+} from "@/types/downloads";
 
 interface PlatformSpec {
   id: PlatformId;
@@ -44,26 +33,17 @@ export const PLATFORMS: PlatformSpec[] = [
   },
 ];
 
-export interface Release {
-  versionId: string;
-  versionName: string;
-  currentVersion: string;
-  plannedEol: string;
-}
-
-export interface ResolvedGroup {
-  key: GroupKey;
-  downloadOptions: { label: string; link: string }[];
-  links: { name: string; link: string }[];
-}
-
 const majorOf = (versionId: string) =>
   Number.parseInt(/\d+/.exec(versionId)?.[0] ?? "0", 10);
 
 /** Major version number for a version id, e.g. "rocky-10" -> "10". */
 export const majorVersion = (versionId: string) => String(majorOf(versionId));
 
-/** Every release offered on any architecture, newest first. */
+/**
+ * Every release with at least one enabled download on some platform, newest
+ * first. Releases whose downloads are all disabled are hidden, so retiring a
+ * release in downloads.json removes it from the picker.
+ */
 export function listReleases(arches: ProcessedArchitectures): Release[] {
   const releases = new Map<string, Release>();
   for (const { versions } of Object.values(arches)) {
@@ -78,9 +58,13 @@ export function listReleases(arches: ProcessedArchitectures): Release[] {
       }
     }
   }
-  return [...releases.values()].sort(
-    (a, b) => majorOf(b.versionId) - majorOf(a.versionId)
-  );
+  return [...releases.values()]
+    .filter(({ versionId }) =>
+      PLATFORMS.some(
+        ({ id }) => availableArchs(arches, versionId, id).length > 0
+      )
+    )
+    .sort((a, b) => majorOf(b.versionId) - majorOf(a.versionId));
 }
 
 /** Non-empty download groups for a platform on one architecture and release. */
