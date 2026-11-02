@@ -271,6 +271,26 @@ test.describe("Download architecture selector", () => {
   });
 });
 
+test.describe("Download documentation links", () => {
+  test("link to the docs for the selected release", async ({ page }) => {
+    await page.goto("/download");
+    await expect(
+      page.getByRole("link", { name: /Documentation/ })
+    ).toHaveAttribute("href", "https://docs.rockylinux.org/10/");
+
+    await page.getByRole("radio", { name: /Rocky Linux 9/ }).check();
+    await expect(
+      page.getByRole("link", { name: /Documentation/ })
+    ).toHaveAttribute("href", "https://docs.rockylinux.org/9/");
+    await expect(
+      page.getByRole("link", { name: /Installation guide/ })
+    ).toHaveAttribute(
+      "href",
+      "https://docs.rockylinux.org/9/guides/9_6_installation/"
+    );
+  });
+});
+
 test.describe("Download cloud provider section", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/download?platform=cloud");

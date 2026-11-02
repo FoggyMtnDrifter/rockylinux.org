@@ -2,7 +2,6 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import downloadData from "@/data/downloads.json";
 
 import DownloadExperience from "./components/DownloadExperience";
-import NextSteps from "./components/NextSteps";
 import GetInvolved from "./components/get-involved";
 import ExportCompliance from "./components/export-compliance";
 
@@ -47,9 +46,6 @@ const DownloadPage = async ({ params }: Props) => {
           </div>
           <div className="mt-10 sm:mt-14">
             <DownloadExperience downloadData={typedDownloadData} />
-          </div>
-          <div className="mx-auto mt-16 max-w-5xl">
-            <NextSteps />
           </div>
           <hr className="my-8" />
           <GetInvolved />

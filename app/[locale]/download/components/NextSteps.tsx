@@ -1,14 +1,21 @@
 import { useTranslations } from "next-intl";
 
-const STEPS = [
-  { id: "install", href: "https://docs.rockylinux.org/guides/installation/" },
-  { id: "docs", href: "https://docs.rockylinux.org" },
-  { id: "migrate", href: "https://docs.rockylinux.org/guides/migrate2rocky/" },
-  { id: "community", href: "https://forums.rockylinux.org" },
-] as const;
+import { docsUrls } from "@/utils/docsLinks";
 
-const NextSteps = () => {
+interface NextStepsProps {
+  /** Selected release; docs links point at that release's documentation */
+  versionId: string;
+}
+
+const NextSteps = ({ versionId }: NextStepsProps) => {
   const t = useTranslations("download.nextSteps");
+  const docs = docsUrls(versionId);
+  const steps = [
+    { id: "install", href: docs.install },
+    { id: "docs", href: docs.home },
+    { id: "migrate", href: docs.migrate },
+    { id: "community", href: "https://forums.rockylinux.org" },
+  ] as const;
 
   return (
     <section aria-labelledby="next-steps-heading">
@@ -19,7 +26,7 @@ const NextSteps = () => {
         {t("title")}
       </h2>
       <ul className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {STEPS.map(({ id, href }) => (
+        {steps.map(({ id, href }) => (
           <li key={id}>
             <a
               href={href}

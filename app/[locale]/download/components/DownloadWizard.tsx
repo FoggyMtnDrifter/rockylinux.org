@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import type { ProcessedArchitectures } from "@/types/downloads";
 
 import DownloadPanel from "./DownloadPanel";
+import NextSteps from "./NextSteps";
 import PlatformPicker from "./PlatformPicker";
 import ReleasePicker from "./ReleasePicker";
 import { useDownloadSelection } from "./useDownloadSelection";
@@ -107,6 +108,8 @@ const DownloadWizard = ({ architectures }: DownloadWizardProps) => {
           onArchChange={selectArch}
         />
       </section>
+
+      <NextSteps versionId={release.versionId} />
     </div>
   );
 };
